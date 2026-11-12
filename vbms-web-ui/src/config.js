@@ -9,7 +9,7 @@ export const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS;
 export const SOFTWARE_NAME = process.env.SOFTWARE_NAME;
 export const PACKAGE_VERSION = process.env.PACKAGE_VERSION.replace(/["]/g, "") || "N/a";
 export const PORTAL_URL = process.env.PORTAL_URL;
-export const MAX_BMS_COUNT = 15;
+export const MAX_BMS_COUNT = 5;
 export const MAX_BLE_COUNT = 9;
 
 if (process.env.NODE_ENV === "development") {
