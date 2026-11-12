@@ -109,7 +109,7 @@
                 :key="index"
                 :class="{ 'is-selected': false }"
               >
-                <template v-if="a.config.type !== -1">
+                <template v-if="a.config && a.config.type !== -1">
                   <td>
                     <a :title="$t('Open_Details')">{{ a.config.name }}</a>
                     <div v-if="a.data !== null" class="content is-small">
@@ -266,7 +266,7 @@
                 :key="index"
                 :class="{ 'is-selected': false }"
               >
-                <template v-if="a.config.type !== -1">
+                <template v-if="a.config && a.config.type !== -1">
                   <th class="is-vcentered has-text-centered">{{ index }}</th>
                   <td>
                     <a :title="$t('Open_Details')">{{ a.config.name }}</a>
@@ -398,22 +398,34 @@ export default {
 
   computed: {
     bms() {
-      return this.$store.getters["bms"];
+      // Exactly five configured series modules. Ignore unused slots.
+      return (this.$store.getters["bms"] || []).slice(0, 5).filter(
+        item => item && item.config && Number(item.config.type) !== -1
+      );
+    },
+    activeBms() {
+      return this.bms.filter(item => item.data !== null);
     },
     soc() {
-      return (
-        (this.calcSum(this.$store.getters["bms"], "remain_capacity") * 100) /
-        this.calcSum(this.$store.getters["bms"], "full_charge_capacity")
-      ).toFixed(0);
+      if (this.activeBms.length !== this.bms.length || !this.bms.length) return 0;
+      return Math.min(...this.activeBms.map(item => Number(item.data.SOC) / 10));
     },
     soh() {
-      return (this.calcAvg(this.$store.getters["bms"], "SOH") / 10).toFixed(0);
+      if (!this.activeBms.length) return 0;
+      return Math.min(...this.activeBms.map(item => Number(item.data.SOH) / 10));
     },
     avg_voltage() {
-      return this.calcAvg(this.$store.getters["bms"], "pack_voltage");
+      // In series, voltages add; this field name is kept for template compatibility.
+      if (this.activeBms.length !== this.bms.length || !this.bms.length) return 0;
+      return this.calcSum(this.bms, "pack_voltage");
     },
     tot_current() {
-      return this.calcSum(this.$store.getters["bms"], "pack_current");
+      // In series, the same current flows through each module.
+      if (this.activeBms.length !== this.bms.length || !this.bms.length) return 0;
+      const values = this.activeBms.map(item => Number(item.data.pack_current)).sort((x, y) => x - y);
+      if (!values.length || values.some(v => !Number.isFinite(v))) return 0;
+      const mid = Math.floor(values.length / 2);
+      return values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
     },
   },
 
@@ -455,23 +467,23 @@ export default {
       }
     },
     calcSum(arr, key) {
-      if (arr === null) return 0;
-      return arr.reduce(
-        (acc, item) => acc + (item.data !== null ? item.data[key] : 0),
-        0
-      );
+      if (!arr) return 0;
+      const values = arr.filter(item => item && item.data).map(item => Number(item.data[key]));
+      if (!values.length || values.some(v => !Number.isFinite(v))) return 0;
+      // Series pack capacity is one pack capacity, not the sum of five packs.
+      if (key === "remain_capacity" || key === "full_charge_capacity") {
+        return Math.min(...values);
+      }
+      return values.reduce((sum, value) => sum + value, 0);
     },
     calcAvg(arr, key) {
-      if (arr === null) return 0;
-      return (
-        this.calcSum(arr, key) / arr.filter((item) => item.data !== null).length
-      );
+      const values = (arr || []).filter(item => item && item.data).map(item => Number(item.data[key]));
+      if (!values.length || values.some(v => !Number.isFinite(v))) return 0;
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
     },
     calcSOC(arr) {
-      return (
-        (this.calcSum(arr, "remain_capacity") * 100) /
-        this.calcSum(arr, "full_charge_capacity")
-      );
+      const full = this.calcSum(arr, "full_charge_capacity");
+      return full > 0 ? this.calcSum(arr, "remain_capacity") * 100 / full : 0;
     },
     load_config() {
       this.$store
@@ -489,7 +501,7 @@ export default {
               position: "is-bottom",
               type: "is-danger",
             });
-            cancelTimeout(this.tid);
+            clearTimeout(this.tid);
             this.tid = setTimeout(() => {
               this.load_config();
             }, 5000);
