@@ -67,7 +67,7 @@
                   v-if="
                     bms === null ||
                     bms.length === 0 ||
-                    bms.filter((a) => a.data === null).length === bms.length
+                    bms.some((a) => a.data === null)
                   "
                 >
                   <th colspan="3">
@@ -205,7 +205,7 @@
                   v-if="
                     bms === null ||
                     bms.length === 0 ||
-                    bms.filter((a) => a.data === null).length === bms.length
+                    bms.some((a) => a.data === null)
                   "
                 >
                   <th colspan="7">
