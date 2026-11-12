@@ -1026,7 +1026,7 @@ void start_ble(void) {
   xEventGroupClearBits(ble_event_group, SCAN_PENDING_BIT);
 
   esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-  bt_cfg.ble_max_conn = 8;
+  bt_cfg.ble_max_conn = BLE_MAX_COUNT;
   ret = esp_bt_controller_init(&bt_cfg);
   if (ret) {
     LOG(LL_ERROR, ("%s initialize controller failed: %s", __func__,
