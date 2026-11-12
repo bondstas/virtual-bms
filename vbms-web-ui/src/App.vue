@@ -69,18 +69,7 @@
       </template>
     </b-navbar>
     <router-view></router-view>
-    <footer class="footer">
-      <div class="content has-text-centered">
-        <p>
-          <strong>Virtual BMS</strong> by
-          <a href="https://github.com/d4rkmen">d4rkmen</a> Copyright © 2024
-        </p>
-        <p>
-          Powered by <strong>Mongoose OS</strong> ©
-          <a href="https://github.com/cesanta"> Cesanta Software</a>
-        </p>
-      </div>
-    </footer>
+
   </div>
 </template>
 <script>
