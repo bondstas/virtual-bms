@@ -10,7 +10,7 @@ extern "C" {
 #define BLE_STALLED_TIME_S 60
 #define BLE_SCAN_TIMEOUT_MS (BLE_SCAN_TIME_S + 1) * 1000
 // maximim connected devices same time
-#define BLE_MAX_COUNT 9
+#define BLE_MAX_COUNT 5
 // esp_ble_gap_disconnect
 #define BLE_CHECK_TIME_MS 15000
 #define BLE_SCAN_RETRY_DELAY_MS 2000
